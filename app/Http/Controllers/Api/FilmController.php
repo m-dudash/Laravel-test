@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Film;
+use App\Models\Genre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,6 +19,18 @@ class FilmController extends Controller
         return response()->json($films);
     }
 
+    public function genres()
+    {
+        $genres = Genre::all();
+        return response()->json($genres, 200);
+    }
+
+    public function filmsByGenre($id)
+    {
+        $genre = Genre::findOrFail($id);
+        $films = $genre->films()->with('genres')->paginate(10);
+        return response()->json($films, 200);
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -26,7 +39,8 @@ class FilmController extends Controller
         $request->validate([
             'title'=>'required|string|max:255',
             'poster'=>'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'genres'=>'required|array'
+            'genres'=>'required|array',
+            'genres.*' => 'exists:genres,id',
         ]);
 
         $posterPath = $request->file('poster') ? $request->file('poster')->store('posters','public')
@@ -69,7 +83,8 @@ class FilmController extends Controller
         $request->validate([
             'title'=>'required|string|max:255',
             'poster'=>'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'genres'=>'required|array'
+            'genres'=>'required|array',
+            'genres.*' => 'exists:genres,id',
         ]);
 
         $posterPath = $film->poster;
